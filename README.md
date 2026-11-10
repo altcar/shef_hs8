@@ -118,6 +118,22 @@ npm run deploy       # wrangler deploy
 
 The parquet shards are expected in `%TEMP%\opencode\birds\data`; change `DATA_DIR` in `tools/preprocess.ts` to point somewhere else.
 
+## Deploys
+
+Pushing to `main` triggers a Cloudflare Workers Build, which deploys the same Worker that serves the live site.
+
+| Setting | Value |
+|---|---|
+| Worker | `wizzibiz` |
+| Repository | [`altcar/hs8`](https://github.com/altcar/hs8), branch `main` |
+| Build command | `npm ci` |
+| Deploy command | `npx wrangler deploy` |
+| Wrangler version | pinned to `4.160.0` in `devDependencies`, so the build uses exactly that release |
+| Root directory | `/` |
+| Previews | off (production only) |
+
+No credentials live in the repo: builds use a Cloudflare build token, and the D1 binding is declared in `wrangler.jsonc`.
+
 ## Licence notes
 
 Recordings come from xeno-canto, whose recordings are licensed per-recording (mostly CC-BY-NC). They are shipped here as a small demo deck for a non-commercial hackathon project. ESC-50 is CC BY-NC 3.0.
