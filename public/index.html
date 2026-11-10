@@ -1,0 +1,101 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>wizzibiz - swipe on the dawn chorus</title>
+    <meta name="description" content="A Tinder-style feed for birdsong, backed by a DSP pipeline and a small CNN running on Cloudflare Workers." />
+    <link rel="stylesheet" href="/style.css" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#128038;</text></svg>" />
+  </head>
+  <body>
+    <header>
+      <div class="brand">
+        <span class="logo" aria-hidden="true">&#128038;</span>
+        <div>
+          <h1>wizzibiz</h1>
+          <p class="tagline">swipe on the dawn chorus. it learns what you like.</p>
+        </div>
+      </div>
+      <div class="stats" id="model-stats">
+        <span class="stat"><b id="stat-acc">--</b><small>held-out accuracy</small></span>
+        <span class="stat"><b id="stat-classes">--</b><small>classes</small></span>
+        <span class="stat"><b id="stat-params">--</b><small>params</small></span>
+      </div>
+    </header>
+
+    <main>
+      <section class="deck-area">
+        <div class="card" id="card">
+          <div class="card-loading" id="card-loading">loading the forest&hellip;</div>
+          <div class="card-body" id="card-body" hidden>
+            <canvas id="spectro" width="720" height="260"></canvas>
+            <div class="card-meta">
+              <span class="pill" id="pill-hint">tap play, then swipe</span>
+              <span class="px-hint" id="pill-time"></span>
+            </div>
+            <button class="play" id="play" aria-label="play clip">
+              <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor" /></svg>
+              <span>play</span>
+            </button>
+            <div class="reveal" id="reveal" hidden>
+              <div class="reveal-name" id="reveal-name"></div>
+              <div class="reveal-sub" id="reveal-sub"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="action nope" id="nope" aria-label="skip"><span>&#10005;</span><small>nope</small></button>
+          <button class="action like" id="like" aria-label="like"><span>&#9829;</span><small>like</small></button>
+        </div>
+        <p class="hint">arrow keys to swipe &middot; space to play</p>
+        <div class="progress"><div class="bar" id="bar"></div></div>
+      </section>
+
+      <aside>
+        <div class="panel">
+          <h2>your taste model</h2>
+          <div id="taste-notready" class="muted">swipe a few birds and I will fit a logistic regression on the sound embeddings to work out what you like.</div>
+          <div id="taste-ready" hidden>
+            <div class="taste-row"><b id="taste-acc">--</b><small>leave-one-out accuracy</small></div>
+            <div class="taste-row"><b id="taste-likes">--</b><small>birds liked</small></div>
+            <ul class="species-list" id="taste-species"></ul>
+            <button class="gen" id="generate">generate my dawn chorus &#9654;</button>
+            <p class="muted small">blends the pitch tracks of the clips you liked and resynthesises them with Web Audio.</p>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>the sound map</h2>
+          <p class="muted small">principal components of each clip's mel spectrum. the deck is a real cartesian plane.</p>
+          <canvas id="map" width="360" height="260"></canvas>
+        </div>
+
+        <div class="panel">
+          <h2>what's that bird?</h2>
+          <p class="muted small">upload a recording &mdash; the same network runs on the Worker, doing DSP and inference server-side.</p>
+          <label class="upload" for="file">choose a WAV / audio file<input id="file" type="file" accept="audio/*" hidden /></label>
+          <div id="upload-result" class="upload-result"></div>
+        </div>
+
+        <div class="panel tiny">
+          <h2>how it works</h2>
+          <p class="muted small">
+            20 species from <em>xeno-canto</em> (5 s clips) + ESC-50 negatives &rarr; 16 kHz mono &rarr; 512-point STFT,
+            160 hop &rarr; 64-band mel &rarr; log &rarr; 3 one-second windows pooled to 64&times;32 &rarr; standardise
+            &rarr; conv 3&times;3&times;10 &rarr; pool &rarr; conv 3&times;3&times;20 &rarr; pool &rarr; dense 64 &rarr; 21.
+          </p>
+        </div>
+      </aside>
+    </main>
+
+    <footer>
+      <span>built with Cloudflare Workers, D1 and a lot of FFTs.</span>
+      <span><a href="/api/deck" target="_blank" rel="noreferrer">the raw deck</a> &middot; <a href="https://devpost.com/software/wizzibiz" target="_blank" rel="noreferrer">the original submission</a></span>
+    </footer>
+
+    <audio id="audio" preload="auto"></audio>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
