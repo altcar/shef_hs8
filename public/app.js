@@ -417,11 +417,17 @@ $('#like').addEventListener('click', () => swipe(true))
 $('#nope').addEventListener('click', () => swipe(false))
 $('#generate').addEventListener('click', generateChorus)
 $('#play').addEventListener('click', async () => {
-  if (audio.paused) {
+  if (!audio.paused) {
+    audio.pause()
+    return
+  }
+  try {
     await audio.play()
     $('#play').classList.add('playing')
-  } else {
-    audio.pause()
+  } catch (err) {
+    // autoplay policy, a codec the browser refuses, or a missing file
+    $('#pill-hint').textContent = `could not play that clip (${err.name})`
+    console.warn('playback failed', err)
   }
 })
 audio.addEventListener('ended', () => $('#play').classList.remove('playing'))
@@ -445,6 +451,9 @@ window.addEventListener('keydown', (e) => {
 // drag to swipe
 let drag = null
 card.addEventListener('pointerdown', (e) => {
+  // never start a drag from a control inside the card: capturing the pointer
+  // would retarget pointerup to the card and swallow the button's click
+  if (e.target.closest('button, a, input, label, audio')) return
   drag = { x: e.clientX, y: e.clientY }
   card.setPointerCapture(e.pointerId)
 })
